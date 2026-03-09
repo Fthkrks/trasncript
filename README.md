@@ -9,6 +9,7 @@ MP4 video dosyalarını **OpenAI Whisper** ile otomatik olarak transkript eden v
 - 📄 PDF ve TXT formatında kaydetme
 - 🌐 Otomatik dil algılama (100+ dil desteği)
 - 🤖 5 farklı model boyutu seçeneği (tiny → large)
+- ⚡ GPU (CUDA) desteği — varsa otomatik kullanır
 
 ## 📋 Gereksinimler
 
@@ -34,6 +35,38 @@ Expand-Archive -Path "$env:TEMP\ffmpeg.zip" -DestinationPath "C:\ffmpeg" -Force
 ```
 
 > **Not:** Script, `C:\ffmpeg` altındaki FFmpeg'i otomatik olarak PATH'e ekler.
+
+### 3. GPU (CUDA) Kurulumu — Opsiyonel ama Önerilen
+
+GPU kullanmak işlemi **5-10x hızlandırır**. Aşağıdaki adımları izle:
+
+**Adım 1 — NVIDIA sürücüsünü ve CUDA versiyonunu kontrol et:**
+```bash
+nvidia-smi
+```
+Sağ üst köşede `CUDA Version: 12.x` şeklinde bir versiyon yazar. Bunu not al.
+
+Eğer sistemde daha önceden kurulu PyTorch varsa ve CUDA destekli değilse, aşağıdaki komutla kaldırıp tekrar kurman gerekebilir:
+**Adım 2 — Mevcut PyTorch'u kaldır:**
+```bash
+pip uninstall torch torchvision torchaudio -y
+```
+
+**Adım 3 — CUDA destekli PyTorch'u kur:**
+
+| CUDA Versiyonu | Kurulum Komutu |
+|---------------|----------------|
+| 12.1 | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121` |
+| 12.4 | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124` |
+| 11.8 | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118` |
+
+**Adım 4 — GPU'nun algılandığını doğrula:**
+```bash
+python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+```
+`True` ve GPU adın yazıyorsa kurulum tamamdır.
+
+> **Not:** `nvidia-smi` hata veriyorsa [nvidia.com](https://www.nvidia.com/drivers) adresinden GPU modeline uygun sürücüyü kur, ardından yukarıdaki adımları tekrarla.
 
 ## 📖 Kullanım
 
@@ -107,3 +140,4 @@ Script çalıştıktan sonra iki dosya oluşturulur:
 - İlk çalıştırmada Whisper modeli indirilecektir (internet bağlantısı gerekli)
 - Uzun videolarda işlem süresi artabilir
 - GPU (CUDA) varsa otomatik olarak kullanılır, yoksa CPU ile çalışır
+- Çalışma esnasında konsolda `🖥️ Kullanılan cihaz: CUDA` veya `CPU` yazar
