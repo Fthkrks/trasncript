@@ -16,57 +16,71 @@ MP4 video dosyalarını **OpenAI Whisper** ile otomatik olarak transkript eden v
 - **Python 3.8+**
 - **FFmpeg** (ses/video işleme için)
 
-## 🚀 Kurulum
+## 🚀 Adım Adım Sıfırdan Kurulum
 
-### 1. Python Paketleri
+Eğer bilgisayarınızda daha önce hiçbir şey kurulu değilse, aşağıdaki adımları sırasıyla takip edin:
+
+### 1. Python Kurulumu
+Sisteminizde Python yüklü olmalıdır. Yüklü değilse:
+1. [python.org/downloads](https://www.python.org/downloads/) adresine gidin.
+2. Python 3.8 veya daha yeni bir sürümü indirin.
+3. Kurulum sırasında **"Add Python 3.x to PATH"** (Python'u PATH'e ekle) kutucuğunu **kesinlikle işaretleyin**, ardından "Install Now" diyerek kurun.
+
+### 2. Gerekli Kütüphaneleri Yükleme
+Proje klasörünün içine girin (Bu `README.md` dosyasının olduğu klasör). 
+Klasör içindeyken boş bir yere `Shift` tuşuna basılı tutarak sağ tıklayın ve **"PowerShell penceresini burada aç"** (veya Windows 11'de sağ tıklayıp "Terminal'de aç") seçeneğini seçin. Alternatif olarak, klasördeyken adres çubuğuna `cmd` yazıp `Enter`'a basarak Komut İstemini (Terminal) açabilirsiniz. 
+
+Açılan siyah ekranda (terminalde) şu komutu çalıştırın:
 
 ```bash
-pip install openai-whisper fpdf2
+pip install -r requirements.txt
 ```
+> **Not:** Bu komut `openai-whisper`, `fpdf2`, `torch` gibi tüm gerekli paketleri otomatik kuracaktır.
 
-### 2. FFmpeg
+### 3. FFmpeg Kurulumu
 
-FFmpeg sisteminizde yüklü değilse:
+FFmpeg, ses ve video işleme için gereklidir. Sisteminizde yüklü değilse:
 
-**Windows (PowerShell ile indirme):**
+**Windows (PowerShell ile otomatik indirme):**
+Başlat menüsüne sağ tıklayıp **Windows PowerShell**'i açın ve şu komutları sırasıyla kopyalayıp yapıştırıp `Enter`'a basın:
 ```powershell
 Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "$env:TEMP\ffmpeg.zip"
 Expand-Archive -Path "$env:TEMP\ffmpeg.zip" -DestinationPath "C:\ffmpeg" -Force
 ```
+> **Not:** Script, `C:\ffmpeg` altındaki FFmpeg'i otomatik olarak görecek ve kullanacaktır. Ekstra bir ayar yapmanıza gerek yoktur.
 
-> **Not:** Script, `C:\ffmpeg` altındaki FFmpeg'i otomatik olarak PATH'e ekler.
+### 4. GPU (CUDA) Kurulumu — Opsiyonel ama Şiddetle Önerilir
 
-### 3. GPU (CUDA) Kurulumu — Opsiyonel ama Önerilen
-
-GPU kullanmak işlemi **5-10x hızlandırır**. Aşağıdaki adımları izle:
+GPU (Ekran Kartı) kullanmak transkript işlemini **5-10 kat hızlandırır**. NVIDIA ekran kartınız varsa ve `requirements.txt` ile gelen standart `torch` sürümü GPU'nuzu görmezse aşağıdaki adımları izleyin:
 
 **Adım 1 — NVIDIA sürücüsünü ve CUDA versiyonunu kontrol et:**
+Terminal veya CMD'de şu komutu çalıştırın:
 ```bash
 nvidia-smi
 ```
-Sağ üst köşede `CUDA Version: 12.x` şeklinde bir versiyon yazar. Bunu not al.
+*(Sağ üst köşede `CUDA Version: 12.x` veya `11.x` şeklinde bir versiyon yazar. Bunu not alın.)*
 
-Eğer sistemde daha önceden kurulu PyTorch varsa ve CUDA destekli değilse, aşağıdaki komutla kaldırıp tekrar kurman gerekebilir:
-**Adım 2 — Mevcut PyTorch'u kaldır:**
+Eğer sistemde daha önceden kurulu PyTorch varsa ve CUDA destekli değilse, aşağıdaki komutla kaldırıp tekrar kurmanın gerekebilir:
+**Adım 2 — Mevcut PyTorch'u kaldır (Eğer varsa):**
 ```bash
 pip uninstall torch torchvision torchaudio -y
 ```
 
-**Adım 3 — CUDA destekli PyTorch'u kur:**
+**Adım 3 — Ekran kartınıza (CUDA) uygun PyTorch sürümünü kurun:**
+Terminalde, sisteminizdeki CUDA sürümüne göre aşağıdaki komutlardan uygun olanı çalıştırın:
 
-| CUDA Versiyonu | Kurulum Komutu |
+| Sistemdeki CUDA Versiyonu | Çalıştırılacak Komut |
 |---------------|----------------|
-| 12.1 | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121` |
-| 12.4 | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124` |
-| 11.8 | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118` |
+| **12.1** veya **12.4** | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121` |
+| **11.8** | `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118` |
 
 **Adım 4 — GPU'nun algılandığını doğrula:**
 ```bash
-python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'Bulunamadi')"
 ```
-`True` ve GPU adın yazıyorsa kurulum tamamdır.
+`True` ve Ekran Kartı modeliniz (Örn: RTX 3060) yazıyorsa kurulum başarıyla tamamlanmıştır.
 
-> **Not:** `nvidia-smi` hata veriyorsa [nvidia.com](https://www.nvidia.com/drivers) adresinden GPU modeline uygun sürücüyü kur, ardından yukarıdaki adımları tekrarla.
+> **Not:** `nvidia-smi` komutu çalışmıyor veya hata veriyorsa [nvidia.com/drivers](https://www.nvidia.com/drivers) adresinden ekran kartı sürücünüzü güncelleyin.
 
 ## 📖 Kullanım
 

@@ -1,0 +1,5 @@
+openai-whisper
+fpdf2
+torch
+torchvision
+torchaudio
